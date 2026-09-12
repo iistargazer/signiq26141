@@ -478,7 +478,15 @@ async fn main() {
     // OR when Windows excluded port ranges (Hyper-V / WinNAT reservations)
     // block it entirely — common right after a reboot. Fall back to the next
     // few ports so a demo never dies on a stale reservation.
-    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    // Bind on 0.0.0.0 so the server is reachable from outside its container
+    // when deployed (Fly.io, Railway, Render, a VPS, etc.). Loopback-only
+    // (127.0.0.1) would make the process unreachable to the platform's proxy.
+    // Override with BIND_ADDR if you need to pin it to loopback for local dev.
+    let host: std::net::IpAddr = std::env::var("BIND_ADDR")
+        .ok()
+        .and_then(|h| h.parse().ok())
+        .unwrap_or(std::net::IpAddr::from([0, 0, 0, 0]));
+    let addr = SocketAddr::from((host, port));
     let listener = match tokio::net::TcpListener::bind(addr).await {
         Ok(l) => l,
         Err(e) if e.kind() == std::io::ErrorKind::PermissionDenied => {

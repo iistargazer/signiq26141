@@ -1,0 +1,32 @@
+# Fly.io config for the SIH26141 Rust/Axum API server.
+# Deploy from the sih26141/ directory:  fly launch --no-deploy  (first time)
+# then:                                  fly deploy
+#
+# `app` must be globally unique on Fly — change it if `fly launch` says it's taken.
+app = "signiq26141-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  # The server reads PORT and binds 0.0.0.0:$PORT.
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/api/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

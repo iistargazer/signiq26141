@@ -64,7 +64,12 @@ export function setApiBase(newBase: string) {
 
 export function base(): string {
   if (BASE_OVERRIDE) return BASE_OVERRIDE
-  return import.meta.env.DEV ? '' : window.location.origin
+  if (import.meta.env.DEV) return ''
+  // In production, prefer a build-time backend URL (set VITE_API_BASE in the
+  // Vercel project settings, e.g. https://signiq26141-api.fly.dev). Falls back
+  // to same-origin only when the frontend and API are served together.
+  const configured = import.meta.env.VITE_API_BASE as string | undefined
+  return configured ? configured.replace(/\/$/, '') : window.location.origin
 }
 
 async function jsonFetch<T>(url: string, body: unknown): Promise<T> {
