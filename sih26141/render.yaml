@@ -7,6 +7,3 @@ services:
     plan: free
     healthCheckPath: /api/health
     autoDeploy: true
-    envVars:
-      - key: PORT
-        value: "8080"
